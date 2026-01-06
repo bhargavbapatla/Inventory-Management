@@ -1,104 +1,183 @@
 import { useState } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/authContext';
+import {
+  Box,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Typography,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Avatar,
+  Menu,
+  MenuItem,
+  Divider,
+  useTheme,
+  useMediaQuery,
+} from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Inventory2 as InventoryIcon,
+  ReceiptLong as OrdersIcon,
+  Assessment as ReportsIcon,
+  Logout as LogoutIcon,
+} from '@mui/icons-material';
 
 const DashboardLayout = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
+  const profileOpen = Boolean(profileAnchor);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const menuItems = [
+    {
+      label: 'Dashboard',
+      to: '/dashboard',
+      icon: <DashboardIcon fontSize="small" />,
+    },
+    {
+      label: 'Inventory',
+      to: '/dashboard/inventory',
+      icon: <InventoryIcon fontSize="small" />,
+    },
+    {
+      label: 'Orders',
+      to: '/dashboard/orders',
+      icon: <OrdersIcon fontSize="small" />,
+    },
+    {
+      label: 'Reports',
+      to: '/dashboard/reports',
+      icon: <ReportsIcon fontSize="small" />,
+    },
+  ];
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
+  const drawerWidth = isCollapsed ? 64 : 240;
+
   return (
-    <div className="flex h-screen w-full bg-gray-100 overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 text-white flex flex-col flex-shrink-0">
-        <div className="h-16 flex items-center justify-center border-b border-slate-700 px-4">
-          <h1 className="text-xl font-bold truncate">Inventory App</h1>
-        </div>
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <Link
-            to="/dashboard"
-            className="block px-4 py-2 rounded hover:bg-slate-700 transition-colors"
+    <Box sx={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', bgcolor: 'background.default' }}>
+      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <Toolbar>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={() => (isMobile ? setMobileOpen((v) => !v) : setIsCollapsed((v) => !v))}
+            sx={{ mr: 2 }}
+            aria-label={isMobile ? (mobileOpen ? 'Close menu' : 'Open menu') : (isCollapsed ? 'Expand sidebar' : 'Collapse sidebar')}
           >
-            Dashboard
-          </Link>
-          <Link
-            to="/dashboard/inventory"
-            className="block px-4 py-2 rounded hover:bg-slate-700 transition-colors"
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>Dashboard</Typography>
+          <IconButton color="inherit" onClick={(e) => setProfileAnchor(e.currentTarget)}>
+            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+            </Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={profileAnchor}
+            open={profileOpen}
+            onClose={() => setProfileAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           >
-            Inventory
-          </Link>
-          <Link
-            to="/dashboard/orders"
-            className="block px-4 py-2 rounded hover:bg-slate-700 transition-colors"
-          >
-            Orders
-          </Link>
-          <Link
-            to="/dashboard/reports"
-            className="block px-4 py-2 rounded hover:bg-slate-700 transition-colors"
-          >
-            Reports
-          </Link>
-        </nav>
-      </aside>
+            <MenuItem disabled>
+              <Typography variant="body2">{user?.email || 'User'}</Typography>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText primary="Logout" />
+            </MenuItem>
+          </Menu>
+        </Toolbar>
+      </AppBar>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Header */}
-        <header className="h-16 bg-white shadow-sm flex items-center justify-between px-6 flex-shrink-0 z-10">
-          <h2 className="text-xl font-semibold text-gray-800">Dashboard</h2>
-          
-          {/* Profile Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsProfileOpen(!isProfileOpen)}
-              className="flex items-center space-x-2 focus:outline-none"
-            >
-              <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
-                {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </div>
-              <span className="text-gray-700 font-medium hidden md:block">
-                {user?.name || 'User'}
-              </span>
-              <svg
-                className={`w-4 h-4 text-gray-500 transition-transform ${isProfileOpen ? 'rotate-180' : ''}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {/* Dropdown Menu */}
-            {isProfileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border border-gray-100 z-50">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <p className="text-sm text-gray-500">Signed in as</p>
-                  <p className="text-sm font-medium text-gray-900 truncate">{user?.email}</p>
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50 transition-colors"
+      {/* Mobile drawer (temporary) */}
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box' },
+          }}
+        >
+          <Toolbar />
+          <Box sx={{ px: 1, py: 1 }}>
+            <Typography variant="subtitle1" sx={{ px: 2, py: 1, fontWeight: 700 }}>Inventory App</Typography>
+            <List>
+              {menuItems.map((item) => (
+                <ListItemButton
+                  key={item.to}
+                  component={Link}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
                 >
-                  Logout
-                </button>
-              </div>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+      ) : (
+        <Drawer
+          variant="permanent"
+          sx={{
+            width: drawerWidth,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+            },
+          }}
+        >
+          <Toolbar />
+          <Box sx={{ px: 1, py: 1 }}>
+            {!isCollapsed && (
+              <Typography variant="subtitle1" sx={{ px: 2, py: 1, fontWeight: 700 }}>Inventory App</Typography>
             )}
-          </div>
-        </header>
+            <List>
+              {menuItems.map((item) => (
+                <Tooltip key={item.to} title={isCollapsed ? item.label : ''} placement="right">
+                  <ListItemButton component={Link} to={item.to} sx={{ px: isCollapsed ? 1.5 : 2 }}>
+                    <ListItemIcon sx={{ minWidth: isCollapsed ? 0 : 40, mr: isCollapsed ? 0 : 1.5 }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    {!isCollapsed && <ListItemText primary={item.label} />}
+                  </ListItemButton>
+                </Tooltip>
+              ))}
+            </List>
+          </Box>
+        </Drawer>
+      )}
 
-        {/* Main Page Content */}
-        <main className="flex-1 overflow-auto p-6 relative">
+      <Box component="main" sx={{ flexGrow: 1, overflow: 'auto' }}>
+        <Toolbar />
+        <Box sx={{ p: 3 }}>
           <Outlet />
-        </main>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

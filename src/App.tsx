@@ -5,6 +5,7 @@ import { AuthProvider } from './features/auth/authContext.tsx'
 import { BrowserRouter } from 'react-router-dom';
 
 import './App.css'
+import { CssBaseline } from '@mui/material';
 import AppRoutes from './routes/AppRoutes.tsx';
 import Loader from './components/Loader.tsx';
 
@@ -17,6 +18,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <BrowserRouter>
+            <CssBaseline />
             <AppRoutes />
           </BrowserRouter>
           <Toaster position="top-right" />

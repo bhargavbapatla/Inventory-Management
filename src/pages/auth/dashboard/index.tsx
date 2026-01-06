@@ -1,5 +1,5 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
+import EChart from '../../../components/charts/EChart';
 
 const Dashboard = () => {
   // Mock data for dashboard
@@ -27,9 +27,7 @@ const Dashboard = () => {
           </div>
           <div className="space-x-4">
              {/* Placeholder for future actions */}
-             <button className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">
-               Add Item
-             </button>
+
           </div>
         </header>
 
@@ -46,6 +44,58 @@ const Dashboard = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Weekly Sales Trend</h3>
+            </div>
+            <div className="p-4">
+              <EChart
+                option={{
+                  grid: { top: 32, left: 40, right: 16, bottom: 32 },
+                  tooltip: { trigger: 'axis' },
+                  xAxis: { type: 'category', boundaryGap: false, data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
+                  yAxis: { type: 'value' },
+                  series: [
+                    {
+                      name: 'Sales',
+                      type: 'line',
+                      smooth: true,
+                      areaStyle: {},
+                      data: [120, 200, 150, 80, 70, 110, 130],
+                    },
+                  ],
+                }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Stock Levels by Category</h3>
+            </div>
+            <div className="p-4">
+              <EChart
+                option={{
+                  grid: { top: 32, left: 40, right: 16, bottom: 32 },
+                  tooltip: { trigger: 'item' },
+                  xAxis: { type: 'category', data: ['Peripherals', 'Cables', 'Accessories', 'Monitors', 'Keyboards'] },
+                  yAxis: { type: 'value' },
+                  series: [
+                    {
+                      name: 'In Stock',
+                      type: 'bar',
+                      data: [320, 180, 260, 140, 220],
+                      itemStyle: { color: '#6366F1' },
+                    },
+                  ],
+                }}
+              />
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -72,7 +122,7 @@ const Dashboard = () => {
           </div>
 
           {/* Quick Links or Another Widget */}
-          <div className="bg-white rounded-lg shadow">
+          {/* <div className="bg-white rounded-lg shadow">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
             </div>
@@ -87,7 +137,7 @@ const Dashboard = () => {
                 Manage Users
               </button>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
