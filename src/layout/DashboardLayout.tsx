@@ -47,7 +47,7 @@ const DashboardLayout = () => {
     },
     {
       label: 'Inventory',
-      to: '/dashboard/inventory',
+      to: '/inventory',
       icon: <InventoryIcon fontSize="small" />,
     },
     {
