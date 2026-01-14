@@ -26,6 +26,7 @@ import {
   Inventory2 as InventoryIcon,
   ReceiptLong as OrdersIcon,
   Assessment as ReportsIcon,
+  RestaurantMenu as RecipesIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
 
@@ -47,8 +48,13 @@ const DashboardLayout = () => {
     },
     {
       label: 'Inventory',
-      to: '/dashboard/inventory',
+      to: '/inventory',
       icon: <InventoryIcon fontSize="small" />,
+    },
+    {
+      label: 'Recipes',
+      to: '/recipes',
+      icon: <RecipesIcon fontSize="small" />,
     },
     {
       label: 'Orders',

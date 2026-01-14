@@ -59,6 +59,7 @@ const Signup = () => {
           placeholder="you@example.com"
           error={formik.touched.email && formik.errors.email ? formik.errors.email : undefined}
           required
+          // Leading icon is automatically applied for type=\"email\"
         />
         <TextField
           label="Password"

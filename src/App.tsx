@@ -8,6 +8,8 @@ import './App.css'
 import { CssBaseline } from '@mui/material';
 import AppRoutes from './routes/AppRoutes.tsx';
 import Loader from './components/Loader.tsx';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -16,14 +18,15 @@ function App() {
   return (
     <>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <BrowserRouter>
-            <CssBaseline />
-            <AppRoutes />
-          </BrowserRouter>
-          <Toaster position="top-right" />
-
-        </AuthProvider>
+        <Provider store={store}>
+          <AuthProvider>
+            <BrowserRouter>
+              <CssBaseline />
+              <AppRoutes />
+            </BrowserRouter>
+            <Toaster position="top-right" />
+          </AuthProvider>
+        </Provider>
       </QueryClientProvider>
     </>
   )
