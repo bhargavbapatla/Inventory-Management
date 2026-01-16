@@ -62,7 +62,7 @@ const DashboardLayout = () => {
       icon: <OrdersIcon fontSize="small" />,
     },
     {
-      label: 'Reports',
+      label: 'Reports & Analysis',
       to: '/dashboard/reports',
       icon: <ReportsIcon fontSize="small" />,
     },

@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-type Unit = 'grams' | 'kgs' | 'pounds';
+export type Unit = 'grams' | 'kgs' | 'pounds';
 
 export interface InventoryItem {
   id: string;

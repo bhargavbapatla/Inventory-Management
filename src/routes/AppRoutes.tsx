@@ -12,7 +12,7 @@ import DashboardLayout from '../layout/DashboardLayout';
 
 const Dashboard = lazy(() => import('../pages/auth/dashboard'));
 const Inventory = lazy(() => import('../pages/auth/Inventory'));
-// const Recipes = lazy(() => import('@/pages/Recipes'));
+const Recipes = lazy(() => import('../pages/auth/recipe'));
 const Login = lazy(() => import('../pages/auth/login'));
 const Signup = lazy(() => import('../pages/auth/signup'));
 const Landing = lazy(() => import('../pages/auth/landingPage'));
@@ -42,7 +42,7 @@ const AppRoutes = () => {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/inventory" element={<Inventory />} />
-            {/* <Route path="/recipes" element={<Recipes />} /> */}
+            <Route path="/recipes" element={<Recipes />} />
           </Route>
         </Route>
 
