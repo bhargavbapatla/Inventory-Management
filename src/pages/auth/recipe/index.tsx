@@ -11,6 +11,7 @@ import { addRecipe, deleteRecipe, updateRecipe, type RecipeItem, type RecipeIngr
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
 import type { Unit } from "../../../store/slices/inventorySlice";
+import { useAuth } from "../../../features/auth/authContext";
 
 const unitToGramsFactor: Record<Unit, number> = {
   grams: 1,
@@ -32,6 +33,7 @@ const Recipes = () => {
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.recipes.items);
   const inventoryItems = useSelector((state: RootState) => state.inventory.items);
+  const { theme } = useAuth();
   const [open, setOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<RecipeItem | null>(null);
 
@@ -225,7 +227,8 @@ const Recipes = () => {
               type="button"
               title="Edit"
               onClick={() => handleEdit(item)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              style={{ color: theme.textMuted }}
             >
               <svg
                 className="w-4 h-4"
@@ -246,7 +249,8 @@ const Recipes = () => {
               type="button"
               title="Delete"
               onClick={() => handleDelete(item.id)}
-              className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50"
+              className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+              style={{ color: theme.secondary }}
             >
               <svg
                 className="w-4 h-4"
@@ -271,9 +275,14 @@ const Recipes = () => {
   ];
 
   return (
-    <div className="p-2">
+    <div
+      className="p-2"
+      style={{ color: theme.text, fontFamily: theme.fontFamily }}
+    >
       <div className="w-full flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Recipes</h2>
+        <h2 className="text-2xl font-bold" style={{ color: theme.text }}>
+          Recipes
+        </h2>
         <Button
           fullWidth={false}
           className="px-3 py-1 text-sm"
@@ -281,6 +290,7 @@ const Recipes = () => {
             setEditingItem(null);
             handleOpen();
           }}
+          variant="primary"
         >
           Add New Recipe
         </Button>
@@ -298,9 +308,16 @@ const Recipes = () => {
         <div
           className="h-full w-full flex flex-col"
           onClick={(e) => e.stopPropagation()}
+          style={{ backgroundColor: theme.background }}
         >
-          <div className="px-5 py-4 border-b">
-            <h2 className="text-lg font-medium text-gray-900">
+          <div
+            className="px-5 py-4 border-b"
+            style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+          >
+            <h2
+              className="text-lg font-medium"
+              style={{ color: theme.text }}
+            >
               {editingItem ? "Edit Recipe" : "Add Recipe"}
             </h2>
           </div>
@@ -310,9 +327,24 @@ const Recipes = () => {
           >
             <FormikProvider value={formik}>
               <div className="px-5 py-4 space-y-4 flex-1 overflow-y-auto">
-                <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="px-4 py-2 border-b bg-gray-50">
-                    <h3 className="text-sm font-semibold text-gray-900">
+                <div
+                  className="rounded-lg border shadow-sm"
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.surface,
+                  }}
+                >
+                  <div
+                    className="px-4 py-2 border-b"
+                    style={{
+                      borderColor: theme.border,
+                      backgroundColor: theme.surfaceAlt,
+                    }}
+                  >
+                    <h3
+                      className="text-sm font-semibold"
+                      style={{ color: theme.text }}
+                    >
                       Recipe Details
                     </h3>
                   </div>
@@ -348,7 +380,10 @@ const Recipes = () => {
                       />
                     </div>
                     <div className="flex flex-col space-y-1">
-                      <label className="text-sm font-medium text-gray-700 text-left">
+                      <label
+                        className="text-sm font-medium text-left"
+                        style={{ color: theme.text }}
+                      >
                         Description/Notes
                       </label>
                       <textarea
@@ -357,19 +392,42 @@ const Recipes = () => {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         rows={3}
-                        className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                        className="w-full px-3 py-2 border rounded-md bg-white text-left border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                        style={{
+                          color: theme.text,
+                          backgroundColor: theme.surface,
+                          borderColor: theme.border,
+                        }}
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-                  <div className="px-4 py-2 border-b bg-gray-50 flex items-center justify-between">
+                <div
+                  className="rounded-lg border shadow-sm"
+                  style={{
+                    borderColor: theme.border,
+                    backgroundColor: theme.surface,
+                  }}
+                >
+                  <div
+                    className="px-4 py-2 border-b flex items-center justify-between"
+                    style={{
+                      borderColor: theme.border,
+                      backgroundColor: theme.surfaceAlt,
+                    }}
+                  >
                     <div>
-                      <h3 className="text-sm font-semibold text-gray-900">
+                      <h3
+                        className="text-sm font-semibold"
+                        style={{ color: theme.text }}
+                      >
                         Ingredients &amp; Costing
                       </h3>
-                      <p className="text-xs text-gray-500">
+                      <p
+                        className="text-xs"
+                        style={{ color: theme.textMuted }}
+                      >
                         Raw Materials Required
                       </p>
                     </div>
@@ -383,25 +441,53 @@ const Recipes = () => {
                     </Button>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <div
+                      className="overflow-x-auto rounded-lg border"
+                      style={{
+                        borderColor: theme.border,
+                        backgroundColor: theme.surface,
+                      }}
+                    >
+                      <table className="min-w-full divide-y" style={{ borderColor: theme.border }}>
+                        <thead
+                          style={{
+                            backgroundColor: theme.surfaceAlt,
+                          }}
+                        >
                           <tr>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            <th
+                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
                               Ingredient Name
                             </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            <th
+                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
                               Quantity Needed
                             </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            <th
+                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
                               Unit
                             </th>
-                            <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                            <th
+                              className="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider"
+                              style={{ color: theme.textMuted }}
+                            >
                               Action
                             </th>
                           </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody
+                          className="divide-y"
+                          style={{
+                            backgroundColor: theme.surface,
+                            borderColor: theme.border,
+                          }}
+                        >
                           {formik.values.ingredients.map((ing) => {
                             const inventoryItem = inventoryItems.find(
                               (inv) => inv.id === ing.inventoryId
@@ -409,7 +495,7 @@ const Recipes = () => {
 
                             return (
                               <tr key={ing.id}>
-                                <td className="px-4 py-2 text-sm text-gray-900">
+                                <td className="px-4 py-2 text-sm">
                                   <select
                                     value={ing.inventoryId}
                                     onChange={(e) =>
@@ -418,7 +504,12 @@ const Recipes = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    className="w-full px-3 py-2 border rounded-md bg-white text-left border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    style={{
+                                      color: theme.text,
+                                      backgroundColor: theme.surface,
+                                      borderColor: theme.border,
+                                    }}
                                   >
                                     <option value="">
                                       {inventoryItems.length === 0
@@ -432,7 +523,7 @@ const Recipes = () => {
                                     ))}
                                   </select>
                                 </td>
-                                <td className="px-4 py-2 text-sm text-gray-900">
+                                <td className="px-4 py-2 text-sm">
                                   <input
                                     type="number"
                                     min="0"
@@ -443,10 +534,15 @@ const Recipes = () => {
                                         e.target.value
                                       )
                                     }
-                                    className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    className="w-28 px-3 py-2 border rounded-md bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    style={{
+                                      color: theme.text,
+                                      backgroundColor: theme.surface,
+                                      borderColor: theme.border,
+                                    }}
                                   />
                                 </td>
-                                <td className="px-4 py-2 text-sm text-gray-900">
+                                <td className="px-4 py-2 text-sm">
                                   <select
                                     value={ing.unit}
                                     onChange={(e) =>
@@ -455,21 +551,27 @@ const Recipes = () => {
                                         e.target.value as Unit
                                       )
                                     }
-                                    className="w-28 px-3 py-2 border rounded-md bg-white text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    className="w-28 px-3 py-2 border rounded-md bg-white border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                                    style={{
+                                      color: theme.text,
+                                      backgroundColor: theme.surface,
+                                      borderColor: theme.border,
+                                    }}
                                   >
                                     <option value="grams">grams</option>
                                     <option value="kgs">kgs</option>
                                     <option value="pounds">pounds</option>
                                   </select>
                                 </td>
-                                <td className="px-4 py-2 text-sm text-gray-900">
+                                <td className="px-4 py-2 text-sm">
                                   <button
                                     type="button"
                                     title="Remove"
                                     onClick={() =>
                                       handleRemoveIngredientRow(ing.id)
                                     }
-                                    className="inline-flex items-center justify-center rounded-full p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50"
+                                    className="inline-flex items-center justify-center rounded-full p-1.5 transition-colors"
+                                    style={{ color: theme.textMuted }}
                                   >
                                     <svg
                                       className="w-4 h-4"
@@ -493,7 +595,8 @@ const Recipes = () => {
                           {formik.values.ingredients.length === 0 && (
                             <tr>
                               <td
-                                className="px-4 py-4 text-sm text-gray-500 text-center"
+                                className="px-4 py-4 text-sm text-center"
+                                style={{ color: theme.textMuted }}
                                 colSpan={4}
                               >
                                 No ingredients added yet.
@@ -506,16 +609,20 @@ const Recipes = () => {
                   </div>
                 </div>
               </div>
-              <div className="px-5 py-3 border-t flex items-center justify-end space-x-2">
+              <div
+                className="px-5 py-3 border-t flex items-center justify-end space-x-2"
+                style={{ borderColor: theme.border, backgroundColor: theme.surface }}
+              >
                 <Button
                   type="button"
                   fullWidth={false}
                   className="px-3 py-1 text-sm"
                   onClick={handleClose}
+                  variant="secondary"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm">
+                <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary">
                   {editingItem ? "Save Changes" : "Add"}
                 </Button>
               </div>

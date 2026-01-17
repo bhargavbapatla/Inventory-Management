@@ -1,6 +1,53 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-// 1. Define the shape of your User (customize this based on your backend)
+type ThemeName = "pantryLight";
+
+type ThemePalette = {
+  name: ThemeName;
+  background: string;
+  surface: string;
+  surfaceAlt: string;
+  border: string;
+  primary: string;
+  primaryText: string;
+  secondary: string;
+  secondaryText: string;
+  text: string;
+  textMuted: string;
+  neutral: string;
+  fontFamily: string;
+};
+
+const themePresets: Record<ThemeName, ThemePalette> = {
+  pantryLight: {
+    name: "pantryLight",
+    // background: "#F2F0EF",
+    // surface: "#FFFFFF",
+    // surfaceAlt: "#F7F5F3",
+    // border: "#BBBDBC",
+    // primary: "#245F73",
+    // primaryText: "#F2F0EF",
+    // secondary: "#733E24",
+    // secondaryText: "#F2F0EF",
+    // text: "#245F73",
+    // textMuted: "#733E24",
+    // neutral: "#BBBDBC",
+    background: "#F5F5F5",      // Light gray
+    surface: "#FFFFFF",         // White for cards
+    surfaceAlt: "#E8E8E8",      // Slightly darker gray
+    border: "#CCCCCC",          // Light gray
+    primary: "#001F3F",         // Deep Navy Blue
+    primaryText: "#FFFFFF",     // White text on navy
+    secondary: "#D4AF37",       // Metallic Gold for accents
+    secondaryText: "#000000",   // Black text on gold
+    text: "#111111",            // Almost black for main text
+    textMuted: "#666666",       // Dark gray for subtitles
+    neutral: "#666666",
+    fontFamily:
+      '"Roboto", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  },
+};
+
 interface User {
   id: string;
   name: string;
@@ -8,7 +55,6 @@ interface User {
   role: string;
 }
 
-// 2. Define what the Context looks like
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
@@ -16,28 +62,52 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   token: string | null;
+  themeName: ThemeName;
+  theme: ThemePalette;
+  setThemeName: (name: ThemeName) => void;
 }
 
-// Create the context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// 3. The Provider Component
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
-  // Check for an existing session when the app loads
+  const [themeName, setThemeName] = useState<ThemeName>("pantryLight");
+
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    const token = localStorage.getItem("token");
+    const storedToken = localStorage.getItem("token");
+    const storedTheme = localStorage.getItem("themeName") as ThemeName | null;
 
-    if (storedUser && token) {
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
+      setToken(storedToken);
     }
-    setIsLoading(false); // Done checking
+    if (storedTheme && themePresets[storedTheme]) {
+      setThemeName(storedTheme);
+    }
+    setIsLoading(false);
   }, []);
 
-  // Function to log in (save data)
+  useEffect(() => {
+    const palette = themePresets[themeName];
+    const root = document.documentElement;
+    root.style.setProperty("--pp-bg", palette.background);
+    root.style.setProperty("--pp-surface", palette.surface);
+    root.style.setProperty("--pp-surface-alt", palette.surfaceAlt);
+    root.style.setProperty("--pp-border", palette.border);
+    root.style.setProperty("--pp-primary", palette.primary);
+    root.style.setProperty("--pp-primary-text", palette.primaryText);
+    root.style.setProperty("--pp-secondary", palette.secondary);
+    root.style.setProperty("--pp-secondary-text", palette.secondaryText);
+    root.style.setProperty("--pp-text", palette.text);
+    root.style.setProperty("--pp-text-muted", palette.textMuted);
+    root.style.setProperty("--pp-neutral", palette.neutral);
+    root.style.setProperty("--pp-font-family", palette.fontFamily);
+    localStorage.setItem("themeName", themeName);
+  }, [themeName]);
+
   const login = (userData: User, token: string) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
@@ -45,7 +115,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(token);
   };
 
-  // Function to log out (clear data)
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -63,7 +132,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         token,
-        isAuthenticated: !!user
+        isAuthenticated: !!user,
+        themeName,
+        theme: themePresets[themeName],
+        setThemeName,
       }}
     >
       {children}
@@ -71,7 +143,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// 4. Custom Hook for easy usage
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

@@ -9,9 +9,11 @@ import TextField from "../../../components/TextField";
 import { addItem, deleteItem, updateItem, type InventoryItem } from "../../../store/slices/inventorySlice";
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../features/auth/authContext";
 
 
 const Inventory = () => {
+  const { theme } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.inventory.items);
   const [open, setOpen] = useState(false);
@@ -146,9 +148,21 @@ const Inventory = () => {
   ];
 
   return (
-    <div className="p-2">
+    <div
+      className="p-2"
+      style={{
+        backgroundColor: theme.background,
+        color: theme.text,
+        fontFamily: theme.fontFamily,
+      }}
+    >
       <div className="w-full flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">Inventory</h1>
+        <h1
+          className="text-2xl font-semibold"
+          style={{ color: theme.text }}
+        >
+          Inventory
+        </h1>
         <Button
           fullWidth={false}
           className="px-3 py-1 text-sm"
@@ -156,6 +170,7 @@ const Inventory = () => {
             setEditingItem(null);
             handleOpen();
           }}
+          variant="primary"
         >
           Add New Item
         </Button>
@@ -164,15 +179,29 @@ const Inventory = () => {
 
       {mounted && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200 ease-out`}>
-          <div className={`absolute inset-0 bg-black/40 ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`} onClick={handleClose} />
           <div
-            className={`relative w-full max-w-md mx-4 rounded-xl bg-white shadow-lg ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transform transition-all duration-200 ease-out`}
+            className={`absolute inset-0 bg-black/40 ${open ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}
+            onClick={handleClose}
+          />
+          <div
+            className={`relative w-full max-w-md mx-4 rounded-xl shadow-lg ${open ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} transform transition-all duration-200 ease-out`}
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+              color: theme.text,
+            }}
           >
-            <div className="px-5 py-4 border-b">
-              <h2 className="text-lg font-medium text-gray-900">
+            <div
+              className="px-5 py-4 border-b"
+              style={{ borderColor: theme.border }}
+            >
+              <h2
+                className="text-lg font-medium"
+                style={{ color: theme.text }}
+              >
                 {editingItem ? "Edit Item" : "Add Item"}
               </h2>
             </div>
@@ -209,12 +238,20 @@ const Inventory = () => {
               <Field name="unit">
                 {({ field, meta }) => (
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-gray-700 text-left">
+                    <label
+                      className="text-sm font-medium text-left"
+                      style={{ color: theme.text }}
+                    >
                       Unit of Measurement<span className="text-red-600 ml-0.5">*</span>
                     </label>
                     <select
                       {...field}
-                      className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                      className="w-full px-3 py-2 border rounded-md text-left text-sm outline-none"
+                      style={{
+                        backgroundColor: theme.surfaceAlt,
+                        color: theme.text,
+                        borderColor: theme.border,
+                      }}
                     >
                       <option value="grams">grams</option>
                       <option value="kgs">kgs</option>
@@ -242,10 +279,10 @@ const Inventory = () => {
               </Field>
             </div>
             <div className="px-5 py-3 border-t flex items-center justify-end space-x-2">
-              <Button type="button" fullWidth={false} className="px-3 py-1 text-sm" onClick={handleClose}>
+              <Button type="button" fullWidth={false} className="px-3 py-1 text-sm" onClick={handleClose} variant="secondary">
                 Cancel
               </Button>
-              <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm">
+              <Button type="submit" fullWidth={false} className="px-3 py-1 text-sm" variant="primary">
                 {editingItem ? "Save Changes" : "Add"}
               </Button>
             </div>

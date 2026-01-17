@@ -12,19 +12,7 @@ const AuthLayout = () => {
                 <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
 
                     {/* 3. HEADER: Branding Section (Logo & Title) */}
-                    <div className="text-center">
-                        {/* Replace this div with an <img src="/logo.png" /> later */}
-                        <div className="mx-auto h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                            <span className="text-2xl">🧁</span>
-                        </div>
-
-                        <h2 className="mt-4 text-3xl font-extrabold text-gray-900 tracking-tight">
-                            PantryPilot
-                        </h2>
-                        <p className="mt-2 text-sm text-gray-600">
-                            Manage your bakery inventory with ease
-                        </p>
-                    </div>
+                    
 
                     {/* 4. THE OUTLET: This is where Login.tsx / Signup.tsx will automatically appear */}
                     <div className="mt-8">

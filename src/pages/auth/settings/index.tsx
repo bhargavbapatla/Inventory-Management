@@ -56,7 +56,8 @@ const Settings = () => {
           <Button
             type="button"
             onClick={handleDeleteAccount}
-            className="w-full inline-flex items-center justify-center rounded-lg bg-red-600 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+            className="w-full inline-flex items-center justify-center py-2 text-sm font-medium"
+            variant="secondary"
           >
             Delete Account
           </Button>
@@ -91,20 +92,24 @@ const Settings = () => {
             </div>
             <div className="px-5 py-4 border-t">
               <div className="flex justify-end space-x-2">
-                <button
+                <Button
                   type="button"
                   onClick={() => setConfirmOpen(false)}
-                  className="inline-flex items-center justify-center rounded-lg bg-gray-200 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-300"
+                  fullWidth={false}
+                  className="px-3 py-1 text-sm"
+                  variant="secondary"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="button"
                   onClick={handleConfirmDelete}
-                  className="inline-flex items-center justify-center rounded-lg bg-red-600 py-2 text-sm font-medium text-white transition hover:bg-red-700"
+                  fullWidth={false}
+                  className="px-3 py-1 text-sm"
+                  variant="primary"
                 >
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           </div>

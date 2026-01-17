@@ -9,6 +9,7 @@ import TextField from "../../../components/TextField";
 import { addOrder, deleteOrder, updateOrder, type OrderItem } from "../../../store/slices/ordersSlice";
 import type { RootState, AppDispatch } from "../../../store";
 import { toast } from "react-hot-toast";
+import { useAuth } from "../../../features/auth/authContext";
 
 type OrderFormValues = {
   productId: string;
@@ -19,6 +20,7 @@ type OrderFormValues = {
 };
 
 const Orders = () => {
+  const { theme } = useAuth();
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.orders.items);
   const recipes = useSelector((state: RootState) => state.recipes.items);
@@ -204,9 +206,21 @@ const Orders = () => {
   ];
 
   return (
-    <div className="p-2">
+    <div
+      className="p-2"
+      style={{
+        backgroundColor: theme.background,
+        color: theme.text,
+        fontFamily: theme.fontFamily,
+      }}
+    >
       <div className="w-full flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold">Orders</h2>
+        <h2
+          className="text-2xl font-bold"
+          style={{ color: theme.text }}
+        >
+          Orders
+        </h2>
         <Button
           fullWidth={false}
           className="px-3 py-1 text-sm"
@@ -214,14 +228,32 @@ const Orders = () => {
             setEditingItem(null);
             handleOpen();
           }}
+          variant="primary"
         >
           Add New Order
         </Button>
       </div>
 
-      <div className="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="px-4 py-2 border-b bg-gray-50">
-          <h3 className="text-sm font-semibold text-gray-900">Filters</h3>
+      <div
+        className="mb-4 rounded-lg border shadow-sm"
+        style={{
+          borderColor: theme.border,
+          backgroundColor: theme.surface,
+        }}
+      >
+        <div
+          className="px-4 py-2 border-b"
+          style={{
+            borderColor: theme.border,
+            backgroundColor: theme.surfaceAlt,
+          }}
+        >
+          <h3
+            className="text-sm font-semibold"
+            style={{ color: theme.text }}
+          >
+            Filters
+          </h3>
         </div>
         <div className="px-4 py-3 grid grid-cols-1 md:grid-cols-3 gap-3">
           <TextField
@@ -233,18 +265,29 @@ const Orders = () => {
             containerClassName="w-full"
           />
           <div className="flex flex-col space-y-1">
-            <label className="text-sm font-medium text-gray-700 text-left">
+            <label
+              className="text-sm font-medium text-left"
+              style={{ color: theme.text }}
+            >
               Order Date
             </label>
             <input
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+              className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm"
+              style={{
+                backgroundColor: theme.surfaceAlt,
+                color: theme.text,
+                borderColor: theme.border,
+              }}
             />
           </div>
           <div className="flex flex-col space-y-1">
-            <label className="text-sm font-medium text-gray-700 text-left">
+            <label
+              className="text-sm font-medium text-left"
+              style={{ color: theme.text }}
+            >
               Status
             </label>
             <select
@@ -254,7 +297,12 @@ const Orders = () => {
                   e.target.value === "" ? "" : (e.target.value as OrderItem["status"])
                 )
               }
-              className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+              className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm"
+              style={{
+                backgroundColor: theme.surfaceAlt,
+                color: theme.text,
+                borderColor: theme.border,
+              }}
             >
               <option value="">All</option>
               <option value="Pending">Pending</option>
@@ -265,7 +313,10 @@ const Orders = () => {
         </div>
       </div>
 
-      <div className="mb-4 border-t border-gray-200" />
+      <div
+        className="mb-4 border-t"
+        style={{ borderColor: theme.border }}
+      />
 
       <DataTable columns={columns} data={filteredItems} />
 
@@ -276,15 +327,26 @@ const Orders = () => {
             onClick={handleClose}
           />
           <div
-            className={`relative w-full max-w-md mx-4 rounded-xl bg-white shadow-lg ${
+            className={`relative w-full max-w-md mx-4 rounded-xl shadow-lg ${
               open ? "opacity-100 scale-100" : "opacity-0 scale-95"
             } transform transition-all duration-200 ease-out`}
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: theme.surface,
+              border: `1px solid ${theme.border}`,
+              color: theme.text,
+            }}
           >
-            <div className="px-5 py-4 border-b">
-              <h2 className="text-lg font-medium text-gray-900">
+            <div
+              className="px-5 py-4 border-b"
+              style={{ borderColor: theme.border }}
+            >
+              <h2
+                className="text-lg font-medium"
+                style={{ color: theme.text }}
+              >
                 {editingItem ? "Edit Order" : "Add Order"}
               </h2>
             </div>
@@ -305,7 +367,10 @@ const Orders = () => {
                     required
                   />
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-gray-700 text-left">
+                    <label
+                      className="text-sm font-medium text-left"
+                      style={{ color: theme.text }}
+                    >
                       Product<span className="text-red-600 ml-0.5">*</span>
                     </label>
                     <select
@@ -314,7 +379,12 @@ const Orders = () => {
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
                       disabled={recipes.length === 0 && !editingItem}
-                      className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm"
+                      style={{
+                        backgroundColor: theme.surfaceAlt,
+                        color: theme.text,
+                        borderColor: theme.border,
+                      }}
                     >
                       <option value="">
                         {recipes.length === 0 ? "No recipes available" : "Select product"}
@@ -331,13 +401,19 @@ const Orders = () => {
                       </p>
                     ) : null}
                     {recipes.length === 0 && !editingItem && (
-                      <p className="text-xs text-gray-500">
+                      <p
+                        className="text-xs"
+                        style={{ color: theme.textMuted }}
+                      >
                         No recipes available. Create a recipe before creating an order.
                       </p>
                     )}
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-gray-700 text-left">
+                    <label
+                      className="text-sm font-medium text-left"
+                      style={{ color: theme.text }}
+                    >
                       Order Date<span className="text-red-600 ml-0.5">*</span>
                     </label>
                     <input
@@ -346,7 +422,12 @@ const Orders = () => {
                       value={formik.values.orderDate}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm"
+                      style={{
+                        backgroundColor: theme.surfaceAlt,
+                        color: theme.text,
+                        borderColor: theme.border,
+                      }}
                     />
                     {formik.touched.orderDate && formik.errors.orderDate ? (
                       <p className="text-xs text-red-600">
@@ -355,7 +436,10 @@ const Orders = () => {
                     ) : null}
                   </div>
                   <div className="flex flex-col space-y-1">
-                    <label className="text-sm font-medium text-gray-700 text-left">
+                    <label
+                      className="text-sm font-medium text-left"
+                      style={{ color: theme.text }}
+                    >
                       Status<span className="text-red-600 ml-0.5">*</span>
                     </label>
                     <select
@@ -363,7 +447,12 @@ const Orders = () => {
                       value={formik.values.status}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-3 py-2 border rounded-md bg-white text-left text-gray-900 border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+                      className="w-full px-3 py-2 border rounded-md text-left outline-none text-sm"
+                      style={{
+                        backgroundColor: theme.surfaceAlt,
+                        color: theme.text,
+                        borderColor: theme.border,
+                      }}
                     >
                       <option value="Pending">Pending</option>
                       <option value="Completed">Completed</option>
@@ -396,6 +485,7 @@ const Orders = () => {
                     fullWidth={false}
                     className="px-3 py-1 text-sm"
                     onClick={handleClose}
+                    variant="secondary"
                   >
                     Cancel
                   </Button>
@@ -404,6 +494,7 @@ const Orders = () => {
                     fullWidth={false}
                     className="px-3 py-1 text-sm"
                     disabled={recipes.length === 0 && !editingItem}
+                    variant="primary"
                   >
                     {editingItem ? "Save Changes" : "Add"}
                   </Button>

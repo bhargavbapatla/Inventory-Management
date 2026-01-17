@@ -36,13 +36,13 @@ import {
 } from '@mui/icons-material';
 
 const DashboardLayout = () => {
-  const { logout, user } = useAuth();
+  const { logout, user, theme: appTheme } = useAuth();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [profileAnchor, setProfileAnchor] = useState<null | HTMLElement>(null);
   const profileOpen = Boolean(profileAnchor);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const muiTheme = useTheme();
+  const isMobile = useMediaQuery(muiTheme.breakpoints.down('sm'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationsAnchor, setNotificationsAnchor] = useState<null | HTMLElement>(null);
   const notificationsOpen = Boolean(notificationsAnchor);
@@ -108,8 +108,27 @@ const DashboardLayout = () => {
   const drawerWidth = isCollapsed ? 64 : 240;
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', bgcolor: 'background.default' }}>
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        height: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
+        bgcolor: appTheme.background,
+        color: appTheme.text,
+        fontFamily: appTheme.fontFamily,
+      }}
+    >
+      <AppBar
+        position="fixed"
+        sx={{
+          zIndex: (mui) => mui.zIndex.drawer + 1,
+          bgcolor: appTheme.surface,
+          color: appTheme.text,
+          boxShadow: 'none',
+          borderBottom: `1px solid ${appTheme.border}`,
+        }}
+      >
         <Toolbar>
           <IconButton
             color="inherit"
@@ -120,7 +139,12 @@ const DashboardLayout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>PantryPilot</Typography>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, fontWeight: 600, color: appTheme.text }}
+          >
+            PantryPilot
+          </Typography>
           <IconButton color="inherit" onClick={(e) => setNotificationsAnchor(e.currentTarget)} sx={{ mr: 1 }}>
             <Badge
               badgeContent={unreadOrderIds.length}
@@ -132,7 +156,14 @@ const DashboardLayout = () => {
             </Badge>
           </IconButton>
           <IconButton color="inherit" onClick={(e) => setProfileAnchor(e.currentTarget)}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'orange' }}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: appTheme.primary,
+                color: appTheme.primaryText,
+              }}
+            >
               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
             </Avatar>
           </IconButton>
@@ -221,12 +252,23 @@ const DashboardLayout = () => {
           onClose={() => setMobileOpen(false)}
           ModalProps={{ keepMounted: true }}
           sx={{
-            '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box' },
+            '& .MuiDrawer-paper': {
+              width: 240,
+              boxSizing: 'border-box',
+              bgcolor: appTheme.surface,
+              color: appTheme.text,
+              borderRight: `1px solid ${appTheme.border}`,
+            },
           }}
         >
           <Toolbar />
           <Box sx={{ px: 1, py: 1 }}>
-            <Typography variant="subtitle1" sx={{ px: 2, py: 1, fontWeight: 700 }}>Inventory App</Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{ px: 2, py: 1, fontWeight: 700, color: appTheme.text }}
+            >
+              Inventory App
+            </Typography>
             <List>
               {menuItems.map((item) => (
                 <ListItemButton
@@ -251,6 +293,9 @@ const DashboardLayout = () => {
             '& .MuiDrawer-paper': {
               width: drawerWidth,
               boxSizing: 'border-box',
+              bgcolor: appTheme.surface,
+              color: appTheme.text,
+              borderRight: `1px solid ${appTheme.border}`,
             },
           }}
         >
@@ -275,7 +320,14 @@ const DashboardLayout = () => {
         </Drawer>
       )}
 
-      <Box component="main" sx={{ flexGrow: 1, overflow: 'auto' }}>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          overflow: 'auto',
+          bgcolor: appTheme.background,
+        }}
+      >
         <Toolbar />
         <Box sx={{ p: 3 }}>
           <Outlet />

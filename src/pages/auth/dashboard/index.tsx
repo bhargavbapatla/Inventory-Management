@@ -1,46 +1,84 @@
-import { Link } from 'react-router-dom';
-import EChart from '../../../components/charts/EChart';
+import { Link } from "react-router-dom";
+import EChart from "../../../components/charts/EChart";
+import { useAuth } from "../../../features/auth/authContext";
 
 const Dashboard = () => {
-  // Mock data for dashboard
+  const { theme } = useAuth();
+
   const stats = [
-    { title: 'Total Items', value: '1,234', color: 'bg-blue-500' },
-    { title: 'Low Stock', value: '12', color: 'bg-red-500' },
-    { title: 'Total Value', value: '$45,678', color: 'bg-green-500' },
-    { title: 'Pending Orders', value: '5', color: 'bg-yellow-500' },
+    { title: "Total Items", value: "1,234", color: theme.primary },
+    { title: "Low Stock", value: "12", color: theme.secondary },
+    { title: "Total Value", value: "$45,678", color: theme.neutral },
+    { title: "Pending Orders", value: "5", color: theme.secondary },
   ];
 
   const recentActivity = [
-    { id: 1, action: 'Added new item "Wireless Mouse"', time: '2 hours ago' },
-    { id: 2, action: 'Updated stock for "Mechanical Keyboard"', time: '4 hours ago' },
-    { id: 3, action: 'Low stock alert: "USB-C Cable"', time: '5 hours ago' },
-    { id: 4, action: 'Removed item "Old Monitor"', time: '1 day ago' },
+    { id: 1, action: 'Added new item "Wireless Mouse"', time: "2 hours ago" },
+    {
+      id: 2,
+      action: 'Updated stock for "Mechanical Keyboard"',
+      time: "4 hours ago",
+    },
+    { id: 3, action: 'Low stock alert: "USB-C Cable"', time: "5 hours ago" },
+    { id: 4, action: 'Removed item "Old Monitor"', time: "1 day ago" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div
+      className="min-h-screen p-6"
+      style={{
+        backgroundColor: theme.background,
+        color: theme.text,
+        fontFamily: theme.fontFamily,
+      }}
+    >
       <div className="max-w-7xl mx-auto">
         <header className="mb-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-600">Welcome back to your inventory overview.</p>
+            <h1
+              className="text-3xl font-bold"
+              style={{ color: theme.text }}
+            >
+              Dashboard
+            </h1>
+            <p style={{ color: theme.textMuted }}>
+              Welcome back to your inventory overview.
+            </p>
           </div>
           <div className="space-x-4">
-             {/* Placeholder for future actions */}
-
           </div>
         </header>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <div key={index} className="bg-white rounded-lg shadow p-6 border-l-4 border-transparent hover:border-indigo-500 transition-all">
+            <div
+              key={index}
+              className="rounded-lg shadow p-6 border-l-4 transition-all"
+              style={{
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+              }}
+            >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">{stat.title}</p>
-                  <p className="mt-1 text-2xl font-semibold text-gray-900">{stat.value}</p>
+                  <p
+                    className="text-sm font-medium uppercase tracking-wider"
+                    style={{ color: theme.textMuted }}
+                  >
+                    {stat.title}
+                  </p>
+                  <p
+                    className="mt-1 text-2xl font-semibold"
+                    style={{ color: theme.text }}
+                  >
+                    {stat.value}
+                  </p>
                 </div>
-                <div className={`w-3 h-3 rounded-full ${stat.color}`}></div>
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: stat.color }}
+                />
               </div>
             </div>
           ))}
@@ -48,23 +86,75 @@ const Dashboard = () => {
 
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Weekly Sales Trend</h3>
+          <div
+            className="rounded-lg shadow"
+            style={{ backgroundColor: theme.surface }}
+          >
+            <div
+              className="p-6 border-b flex items-center justify-between"
+              style={{ borderColor: theme.border }}
+            >
+              <h3
+                className="text-lg font-medium"
+                style={{ color: theme.text }}
+              >
+                Weekly Sales Trend
+              </h3>
             </div>
             <div className="p-4">
               <EChart
                 option={{
                   grid: { top: 32, left: 40, right: 16, bottom: 32 },
-                  tooltip: { trigger: 'axis' },
-                  xAxis: { type: 'category', boundaryGap: false, data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] },
-                  yAxis: { type: 'value' },
+                  textStyle: {
+                    fontFamily: theme.fontFamily,
+                    color: theme.text,
+                  },
+                  tooltip: {
+                    trigger: "axis",
+                    backgroundColor: theme.surfaceAlt,
+                    borderColor: theme.border,
+                    textStyle: {
+                      color: theme.text,
+                      fontFamily: theme.fontFamily,
+                    },
+                  },
+                  xAxis: {
+                    type: "category",
+                    boundaryGap: false,
+                    data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                    axisLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                    axisLabel: {
+                      color: theme.textMuted,
+                    },
+                    axisTick: {
+                      lineStyle: { color: theme.border },
+                    },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                    axisLabel: {
+                      color: theme.textMuted,
+                    },
+                    splitLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                  },
                   series: [
                     {
-                      name: 'Sales',
-                      type: 'line',
+                      name: "Sales",
+                      type: "line",
                       smooth: true,
-                      areaStyle: {},
+                      itemStyle: {
+                        color: theme.primary,
+                      },
+                      areaStyle: {
+                        color: `${theme.primary}26`,
+                      },
                       data: [120, 200, 150, 80, 70, 110, 130],
                     },
                   ],
@@ -73,23 +163,75 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Stock Levels by Category</h3>
+          <div
+            className="rounded-lg shadow"
+            style={{ backgroundColor: theme.surface }}
+          >
+            <div
+              className="p-6 border-b flex items-center justify-between"
+              style={{ borderColor: theme.border }}
+            >
+              <h3
+                className="text-lg font-medium"
+                style={{ color: theme.text }}
+              >
+                Stock Levels by Category
+              </h3>
             </div>
             <div className="p-4">
               <EChart
                 option={{
                   grid: { top: 32, left: 40, right: 16, bottom: 32 },
-                  tooltip: { trigger: 'item' },
-                  xAxis: { type: 'category', data: ['Peripherals', 'Cables', 'Accessories', 'Monitors', 'Keyboards'] },
-                  yAxis: { type: 'value' },
+                  textStyle: {
+                    fontFamily: theme.fontFamily,
+                    color: theme.text,
+                  },
+                  tooltip: {
+                    trigger: "item",
+                    backgroundColor: theme.surfaceAlt,
+                    borderColor: theme.border,
+                    textStyle: {
+                      color: theme.text,
+                      fontFamily: theme.fontFamily,
+                    },
+                  },
+                  xAxis: {
+                    type: "category",
+                    data: [
+                      "Peripherals",
+                      "Cables",
+                      "Accessories",
+                      "Monitors",
+                      "Keyboards",
+                    ],
+                    axisLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                    axisLabel: {
+                      color: theme.textMuted,
+                    },
+                    axisTick: {
+                      lineStyle: { color: theme.border },
+                    },
+                  },
+                  yAxis: {
+                    type: "value",
+                    axisLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                    axisLabel: {
+                      color: theme.textMuted,
+                    },
+                    splitLine: {
+                      lineStyle: { color: theme.border },
+                    },
+                  },
                   series: [
                     {
-                      name: 'In Stock',
-                      type: 'bar',
+                      name: "In Stock",
+                      type: "bar",
                       data: [320, 180, 260, 140, 220],
-                      itemStyle: { color: '#6366F1' },
+                      itemStyle: { color: theme.secondary },
                     },
                   ],
                 }}
@@ -100,22 +242,52 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow lg:col-span-2">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+          <div
+            className="rounded-lg shadow lg:col-span-2"
+            style={{ backgroundColor: theme.surface }}
+          >
+            <div
+              className="p-6 border-b"
+              style={{ borderColor: theme.border }}
+            >
+              <h3
+                className="text-lg font-medium"
+                style={{ color: theme.text }}
+              >
+                Recent Activity
+              </h3>
             </div>
-            <ul className="divide-y divide-gray-200">
+            <ul className="divide-y" style={{ borderColor: theme.border }}>
               {recentActivity.map((activity) => (
-                <li key={activity.id} className="p-6 hover:bg-gray-50 transition">
+                <li
+                  key={activity.id}
+                  className="p-6 transition"
+                  style={{ color: theme.text }}
+                >
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-gray-700">{activity.action}</p>
-                    <span className="text-xs text-gray-500">{activity.time}</span>
+                    <p className="text-sm">{activity.action}</p>
+                    <span
+                      className="text-xs"
+                      style={{ color: theme.textMuted }}
+                    >
+                      {activity.time}
+                    </span>
                   </div>
                 </li>
               ))}
             </ul>
-            <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-              <Link to="#" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+            <div
+              className="p-4 border-t rounded-b-lg"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surfaceAlt,
+              }}
+            >
+              <Link
+                to="#"
+                className="text-sm font-medium"
+                style={{ color: theme.primary }}
+              >
                 View all activity &rarr;
               </Link>
             </div>
