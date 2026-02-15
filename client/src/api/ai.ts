@@ -1,10 +1,10 @@
 import { authorizedAPI } from './api';
 import { ai } from './paths';
 
-export const askSousChefAi = async (query: string) => {
+export const askSousChefAi = async (query: string, wantsAudio: boolean = false) => {
     try {
-        const response = await authorizedAPI.post(`${ai}/ask`, { query });
-        return { data: response.data.data, status: response.status, message: response.data.message || 'Sous Chef response received successfully' };
+        const response = await authorizedAPI.post(`${ai}/ask`, { query, wantsAudio });
+        return { data: response.data.data, status: response.status, message: response.data.message || 'Sous Chef response received successfully', audio: response.data.audio };
 
     } catch (error: any) {
         if (error.response) {

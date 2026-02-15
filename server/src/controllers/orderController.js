@@ -22,7 +22,7 @@ const toBaseUnits = (value, unit) => {
 
 // --- INVENTORY HELPERS ---
 
-const deductInventoryForOrder = async (order, tx) => {
+export const deductInventoryForOrder = async (order, tx) => {
     const requirements = {};
 
     for (const orderItem of order.orderItems) {
@@ -83,7 +83,7 @@ const deductInventoryForOrder = async (order, tx) => {
     }
 };
 
-const restoreInventoryForOrder = async (order, tx) => {
+export const restoreInventoryForOrder = async (order, tx) => {
     const requirements = {};
 
     for (const orderItem of order.orderItems) {
