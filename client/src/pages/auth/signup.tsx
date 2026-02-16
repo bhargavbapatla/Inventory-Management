@@ -27,7 +27,11 @@ const Signup = () => {
         .email("Invalid email address")
         .required("Email is required"),
       password: Yup.string()
-        .min(6, "Password must be at least 6 characters")
+        .min(8, "At least 8 characters")
+        .matches(/[a-z]/, "Include a lowercase letter")
+        .matches(/[A-Z]/, "Include an uppercase letter")
+        .matches(/\d/, "Include a number")
+        .matches(/[^A-Za-z0-9]/, "Include a special character")
         .required("Password is required"),
       confirmPassword: Yup.string()
         .oneOf([Yup.ref("password"), undefined], "Passwords must match")
@@ -45,8 +49,8 @@ const Signup = () => {
           // Assuming data contains user and token. 
           // If structure is different, this might need adjustment.
           // Based on typical auth flows:
-          const user = data.user || { name: values.name, email: values.email, id: data.id || "temp-id", role: "user" }; 
-          const token = data.token || data.accessToken || "mock-token-if-missing";
+          const user = data.data || { name: values.name, email: values.email, id: data.id || "temp-id", role: "user" }; 
+          const token = data.data.token || data.accessToken || "mock-token-if-missing";
 
           // Save to AuthContext (and localStorage)
           // This keeps it in the same object as the login (AuthContext)
@@ -57,9 +61,9 @@ const Signup = () => {
           console.error("Signup failed:", data);
           toast.error(message || "Signup failed. Please try again.");
         }
-      } catch (error: any) {
-        console.error("Signup error:", error);
-        const errorMessage = error.response?.data?.message || "An error occurred during signup.";
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        const errorMessage = err.response?.data?.message || "An error occurred during signup.";
         toast.error(errorMessage);
       } finally {
         setLoading(false);

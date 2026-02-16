@@ -95,37 +95,44 @@ export const createProduct = async (req, res) => {
                         });
                     }
 
-                    let inventoryItemBaseWeightInGrams, totalAvailableGrams, quantityNeededInGrams;
+                    let quantityNeededInBaseUnits = 0;
+                    let totalHistoricalBaseUnits = 0;
+
+                    // 1. NORMALIZE UNITS FOR BOTH INGREDIENTS AND PACKAGING
                     if (inventoryItem.category === 'INGREDIENTS') {
-                        inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
-
-                        totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
-
-                        quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
-
+                        // e.g., 60 historical packs * 100g = 6,000 total grams ever bought
+                        const weightOfOnePackInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+                        totalHistoricalBaseUnits = (inventoryItem.quantity || 0) * weightOfOnePackInGrams;
+                        
+                        // Convert what the recipe needs into grams too
+                        quantityNeededInBaseUnits = getWeightInGrams(item.quantityNeeded || 0, item.unit);
                     } else {
-                        inventoryItemBaseWeightInGrams = inventoryItem.quantity
-
-                        totalAvailableGrams = inventoryItem.quantity || 0;
-
-                        quantityNeededInGrams = item.quantityNeeded || 0;
-
-
+                        // For packaging, the quantity is the base unit (e.g., 60 boxes)
+                        totalHistoricalBaseUnits = inventoryItem.quantity || 0;
+                        quantityNeededInBaseUnits = item.quantityNeeded || 0;
                     }
 
-                    if (quantityNeededInGrams > totalAvailableGrams) {
+                    // 2. STOCK VALIDATION (Using actual physical shelf stock)
+                    // remainingStock is already tracked in base units (grams/ml/boxes) in your DB
+                    const currentShelfStock = inventoryItem.remainingStock || 0;
+
+                    if (quantityNeededInBaseUnits > currentShelfStock) {
+                        const unitLabel = inventoryItem.category === 'PACKAGING' ? 'pieces/boxes' : 'g/ml';
                         return res.status(400).json({
                             status: 400,
                             success: false,
-                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInGrams}g, but only have ${totalAvailableGrams}g available.`
+                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInBaseUnits} ${unitLabel}, but only have ${currentShelfStock} ${unitLabel} available.`
                         });
                     }
 
-                    const pricePerGram = inventoryItemBaseWeightInGrams > 0
-                        ? (inventoryItem.price || 0) / inventoryItemBaseWeightInGrams
+                    // 3. THE AVERAGE COSTING MATH
+                    // Total Money Ever Spent / Total Units Ever Bought
+                    const averageCostPerBaseUnit = totalHistoricalBaseUnits > 0
+                        ? (inventoryItem.price || 0) / totalHistoricalBaseUnits
                         : 0;
 
-                    totalIngredientsCost += pricePerGram * quantityNeededInGrams;
+                    // Multiply exact average cost per gram/box by the amount needed
+                    totalIngredientsCost += (averageCostPerBaseUnit * quantityNeededInBaseUnits);
                 }
             }
         }
@@ -159,13 +166,13 @@ export const createProduct = async (req, res) => {
             include: {
                 ingredients: true,
             },
-        })
+        });
 
         return res.status(200).json({
             message: 'Product created successfully',
             status: 200,
             data: product,
-        })
+        });
     } catch (error) {
         console.error("Error creating product:", error);
         return res.status(500).json({
@@ -181,9 +188,24 @@ export const updateProduct = async (req, res) => {
         const { id } = req.params;
         const { name, makingCharge, description, ingredients } = req.body;
 
+        // 1. Check if the product actually exists and belongs to the user first
+        const existing = await prisma.product.findFirst({
+            where: {
+                id,
+                userId: req.userId,
+            },
+        });
+
+        if (!existing) {
+            return res.status(404).json({
+                message: 'Product not found',
+                status: 404,
+            });
+        }
+
         let totalIngredientsCost = 0;
 
-        // Calculate total cost from ingredients
+        // 2. Calculate total cost from ingredients using Cumulative Average
         if (ingredients && Array.isArray(ingredients)) {
             for (const item of ingredients) {
                 if (item.inventoryId) {
@@ -198,38 +220,42 @@ export const updateProduct = async (req, res) => {
                             message: "Inventory item not found."
                         });
                     }
-                    let inventoryItemBaseWeightInGrams, totalAvailableGrams, quantityNeededInGrams;
+
+                    let quantityNeededInBaseUnits = 0;
+                    let totalHistoricalBaseUnits = 0;
+
+                    // A. NORMALIZE UNITS FOR BOTH INGREDIENTS AND PACKAGING
                     if (inventoryItem.category === 'INGREDIENTS') {
-                        inventoryItemBaseWeightInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
-
-                        totalAvailableGrams = (inventoryItem.quantity || 0) * inventoryItemBaseWeightInGrams;
-
-                        quantityNeededInGrams = getWeightInGrams(item.quantityNeeded || 0, item.unit);
-
+                        // e.g., 60 historical packs * 100g = 6,000 total grams ever bought
+                        const weightOfOnePackInGrams = getWeightInGrams(inventoryItem.weight || 0, inventoryItem.unit);
+                        totalHistoricalBaseUnits = (inventoryItem.quantity || 0) * weightOfOnePackInGrams;
+                        
+                        // Convert what the recipe needs into grams too
+                        quantityNeededInBaseUnits = getWeightInGrams(item.quantityNeeded || 0, item.unit);
                     } else {
-                        inventoryItemBaseWeightInGrams = inventoryItem.quantity
-
-                        totalAvailableGrams = inventoryItem.quantity || 0;
-
-                        quantityNeededInGrams = item.quantityNeeded || 0;
-
-
+                        // For packaging, the quantity is the base unit (e.g., 60 boxes)
+                        totalHistoricalBaseUnits = inventoryItem.quantity || 0;
+                        quantityNeededInBaseUnits = item.quantityNeeded || 0;
                     }
 
+                    // B. STOCK VALIDATION (Using actual physical shelf stock)
+                    const currentShelfStock = inventoryItem.remainingStock || 0;
 
-                    if (quantityNeededInGrams > totalAvailableGrams) {
+                    if (quantityNeededInBaseUnits > currentShelfStock) {
+                        const unitLabel = inventoryItem.category === 'PACKAGING' ? 'pieces/boxes' : 'g/ml';
                         return res.status(400).json({
                             status: 400,
                             success: false,
-                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInGrams}g, but only have ${totalAvailableGrams}g available.`
+                            message: `Insufficient stock for ${inventoryItem.name}. You need ${quantityNeededInBaseUnits}${unitLabel}, but only have ${currentShelfStock}${unitLabel} available.`
                         });
                     }
 
-                    const pricePerGram = inventoryItemBaseWeightInGrams > 0
-                        ? (inventoryItem.price || 0) / inventoryItemBaseWeightInGrams
+                    // C. THE AVERAGE COSTING MATH
+                    const averageCostPerBaseUnit = totalHistoricalBaseUnits > 0
+                        ? (inventoryItem.price || 0) / totalHistoricalBaseUnits
                         : 0;
 
-                    totalIngredientsCost += pricePerGram * quantityNeededInGrams;
+                    totalIngredientsCost += (averageCostPerBaseUnit * quantityNeededInBaseUnits);
                 }
             }
         }
@@ -238,20 +264,8 @@ export const updateProduct = async (req, res) => {
 
         console.log("Total Ingredients Cost:", totalIngredientsCost);
         console.log("Total Cost Price:", totalCostPrice.toFixed(2));
-        console.log("ingredients:", ingredients);
 
-        const existing = await prisma.product.findFirst({
-            where: {
-                id,
-                userId: req.userId,
-            },
-        });
-        if (!existing) {
-            return res.status(404).json({
-                message: 'Product not found',
-                status: 404,
-            });
-        }
+        // 3. Update the database
         const product = await prisma.product.update({
             where: {
                 id,
@@ -262,8 +276,8 @@ export const updateProduct = async (req, res) => {
                 description,
                 totalCostPrice,
                 ingredients: {
-                    deleteMany: {},
-                    create: ingredients.map((i) => ({
+                    deleteMany: {}, // Clear out the old recipe ingredients
+                    create: ingredients.map((i) => ({ // Insert the newly edited ones
                         inventoryId: i.inventoryId,
                         quantity: i.quantityNeeded,
                         unit: i.unit,
@@ -274,6 +288,7 @@ export const updateProduct = async (req, res) => {
                 ingredients: true,
             },
         })
+
         return res.status(200).json({
             message: 'Product updated successfully',
             status: 200,

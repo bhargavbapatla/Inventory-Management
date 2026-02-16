@@ -66,16 +66,18 @@ const Customers = () => {
     onSubmit: async (values, helpers) => {
       setLoading(true);
       const payload = {
-        name: values.name.trim(),
-        email: values.email ? values.email.trim() : null,
-        phone: values.phone.trim(),
-        address: values.address.trim(),
+        customer: {
+          name: values.name.trim(),
+          email: values.email ? values.email.trim() : null,
+          phone: values.phone.trim(),
+          address: values.address.trim(),
+        }
       };
 
       if (editingItem?.id) {
         const { status, message } = await updateCustomerById(payload as any, editingItem.id);
         if (status === 200) {
-          dispatch(updateCustomer({ id: editingItem.id, ...payload }));
+          dispatch(updateCustomer({ id: editingItem.id, ...payload.customer }));
           toast.success(message || "Customer updated");
         } else {
           toast.error(message || "Failed to update customer");

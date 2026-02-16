@@ -46,7 +46,7 @@ export const getCustomerById = async (id: string) => {
 }
 export const createCustomer = async (customerData: Customer | Omit<Customer, 'id'>) => {
     try {
-        const response = await authorizedAPI.post(customerPath, customerData);
+        const response = await authorizedAPI.post(`${customerPath}/create`, customerData);
         return { data: response.data.data, status: response.status, message: response.data.message || 'Customer posted successfully' };
     } catch (error: any) {
         if (error.response) {

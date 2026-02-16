@@ -58,7 +58,7 @@ export const postProductData = async (product: ProductItem) => {
 
             return {
                 success: false,
-                message: error.response.data?.error,
+                message: error.response.data?.message,
                 status: error.response.status
             };
         } else {

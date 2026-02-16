@@ -1,5 +1,5 @@
 import express from 'express';
-import { createInventory, deleteInventory, getInventory, updateInventory } from '../controllers/inventoryController.js';
+import { createInventory, deleteInventory, getInventory, updateInventory, restockInventory } from '../controllers/inventoryController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -206,4 +206,5 @@ router.put('/:id',authMiddleware, updateInventory);
  *         description: Server error
  */
 router.delete('/:id',authMiddleware, deleteInventory);
+router.put('/:id/restock', authMiddleware, restockInventory);
 export default router;

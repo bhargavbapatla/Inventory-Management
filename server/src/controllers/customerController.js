@@ -21,6 +21,7 @@ export const createCustomer = async (req, res) => {
                     name,
                     phone,
                     address,
+                    email: customer.email,
                     user: req.userId
                         ? {
                               connect: {

@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
-import React, { useEffect, useState, useMemo, memo } from "react"; // Added useMemo and memo
+import React, { useEffect, useState, useMemo, memo, useRef } from "react";
 import * as echarts from "echarts";
 import EChart from "../../../components/charts/EChart";
 import { useAuth } from "../../../features/auth/authContext";
 import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
+
+// --- Icons ---
 import AutoAwesome from '@mui/icons-material/AutoAwesome';
 import MicNone from '@mui/icons-material/MicNone';
+import Mic from '@mui/icons-material/Mic';
 import AttachFile from '@mui/icons-material/AttachFile';
 import ArrowUpward from '@mui/icons-material/ArrowUpward';
 import OpenInFull from '@mui/icons-material/OpenInFull';
@@ -18,6 +21,10 @@ import TrendingUp from '@mui/icons-material/TrendingUp';
 import TrendingDown from '@mui/icons-material/TrendingDown';
 import Close from '@mui/icons-material/Close';
 import Visibility from '@mui/icons-material/Visibility';
+// 👉 NEW: Volume Icons
+import VolumeUp from '@mui/icons-material/VolumeUp';
+import VolumeOff from '@mui/icons-material/VolumeOff';
+
 import { askSousChefAi } from "../../../api/ai";
 import toast from "react-hot-toast";
 
@@ -25,12 +32,12 @@ import toast from "react-hot-toast";
 
 const FormatAIResponse = ({ text, isExpanded = false }: { text: string, isExpanded?: boolean }) => {
   if (!text) return null;
-  
+
   return (
     <div className={`text-gray-700 space-y-3 overflow-y-auto pr-2 custom-scrollbar ${isExpanded ? 'text-base max-h-[60vh]' : 'text-sm max-h-[160px]'}`}>
       {text.split('\n').map((line, i) => {
         if (!line.trim()) return <br key={i} />;
-        
+
         const parts = line.split(/(\*\*.*?\*\*)/g);
         return (
           <p key={i} className="leading-relaxed">
@@ -49,7 +56,7 @@ const FormatAIResponse = ({ text, isExpanded = false }: { text: string, isExpand
 
 function Counter({ value, prefix = "" }: { value: number; prefix?: string }) {
   const spring = useSpring(0, { bounce: 0, duration: 2000 });
-  const display = useTransform(spring, (current) => 
+  const display = useTransform(spring, (current) =>
     prefix + Math.round(current).toLocaleString()
   );
 
@@ -73,7 +80,7 @@ const AIOrb = ({ large = false }: { large?: boolean }) => {
         transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         className={`relative rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-[0_0_40px_rgba(59,130,246,0.6)] flex items-center justify-center ${large ? 'w-32 h-32' : 'w-24 h-24'}`}
       >
-         <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white opacity-20 blur-sm" />
+        <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white opacity-20 blur-sm" />
       </motion.div>
     </div>
   );
@@ -88,6 +95,58 @@ interface ChatInputProps {
 }
 
 const ChatInput = ({ query, setQuery, onSend, loading, isExpanded = false }: ChatInputProps) => {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+        recognition.lang = 'en-IN';
+
+        recognition.onresult = (event: any) => {
+          const currentTranscript = event.results[0][0].transcript;
+          setQuery(currentTranscript);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error("Speech recognition error:", event.error);
+          setIsListening(false);
+        };
+
+        recognition.onend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current = recognition;
+      }
+    }
+  }, [setQuery]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      toast.error("Your browser does not support voice input. Try Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        setQuery("");
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error("Microphone already active.", e);
+      }
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') onSend();
   }
@@ -97,24 +156,38 @@ const ChatInput = ({ query, setQuery, onSend, loading, isExpanded = false }: Cha
       <button className="text-gray-400 hover:text-gray-600 transition-colors mr-2">
         <AttachFile fontSize="small" className="rotate-45" />
       </button>
-      <input 
-        type="text" 
+
+      <input
+        type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={loading ? "Cooking up an answer..." : "Ask Sous Chef..."} 
+        placeholder={
+          isListening ? "Listening..." :
+            loading ? "Cooking up an answer..." :
+              "Ask Sous Chef..."
+        }
         className={`bg-transparent border-none outline-none text-gray-700 placeholder-gray-400 w-full ${isExpanded ? 'text-base' : 'text-sm'}`}
         disabled={loading}
         autoFocus={isExpanded}
       />
+
       <div className="flex items-center gap-2 ml-2">
-        <button className="text-gray-400 hover:text-gray-600">
-          <MicNone fontSize="small" />
+        <button
+          onClick={toggleListening}
+          className={`transition-colors p-1 rounded-full flex items-center justify-center ${isListening
+              ? 'text-red-500 bg-red-100 animate-pulse'
+              : 'text-gray-400 hover:text-gray-600'
+            }`}
+          title="Click to speak"
+        >
+          {isListening ? <Mic fontSize="small" /> : <MicNone fontSize="small" />}
         </button>
-        <button 
+
+        <button
           className={`flex items-center justify-center rounded-full text-white shadow-md transition-all ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:scale-105 active:scale-95'} ${isExpanded ? 'w-10 h-10' : 'w-8 h-8'}`}
           onClick={onSend}
-          disabled={loading}
+          disabled={loading || !query.trim()}
         >
           <ArrowUpward fontSize={isExpanded ? "medium" : "small"} />
         </button>
@@ -123,11 +196,8 @@ const ChatInput = ({ query, setQuery, onSend, loading, isExpanded = false }: Cha
   );
 };
 
-// --- ✅ NEW: Memoized Charts Component ---
-// This isolates the charts so they don't re-render when you type in the input box
 const DashboardCharts = memo(({ theme }: { theme: any }) => {
-  
-  // Use useMemo to prevent object recreation
+
   const salesChartOption: echarts.EChartsOption = useMemo(() => ({
     grid: { top: 32, left: 40, right: 16, bottom: 32 },
     textStyle: { fontFamily: theme.fontFamily, color: theme.text },
@@ -172,57 +242,98 @@ const DashboardCharts = memo(({ theme }: { theme: any }) => {
 
 const Dashboard = () => {
   const { theme } = useAuth();
-  
+
   const [aiQuery, setAiQuery] = useState("");
   const [aiResponse, setAiResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // 👉 NEW: State to track if the user wants audio playback
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
   const stats = [
     { title: "Total Items", value: 1234, icon: <Inventory2Outlined />, color: "blue", trend: "+12.5%", isPositive: true },
     { title: "Low Stock", value: 12, icon: <WarningAmberRounded />, color: "red", trend: "+2.4%", isPositive: false },
-    { title: "Total Value", value: 45678, prefix: "$", icon: <AttachMoneyRounded />, color: "green", trend: "+8.2%", isPositive: true },
+    { title: "Total Value", value: 45678, prefix: "₹", icon: <AttachMoneyRounded />, color: "green", trend: "+8.2%", isPositive: true },
     { title: "Pending Orders", value: 5, icon: <ScheduleRounded />, color: "orange", trend: "-1.2%", isPositive: false },
   ];
 
   const recentActivity = [
-    { id: 1, action: 'Added new item "Wireless Mouse"', time: "2 hours ago" },
-    { id: 2, action: 'Updated stock for "Mechanical Keyboard"', time: "4 hours ago" },
-    { id: 3, action: 'Low stock alert: "USB-C Cable"', time: "5 hours ago" },
-    { id: 4, action: 'Removed item "Old Monitor"', time: "1 day ago" },
+    { id: 1, action: 'Added new item "Brownie Box"', time: "2 hours ago" },
+    { id: 2, action: 'Updated stock for "Maida"', time: "4 hours ago" },
+    { id: 3, action: 'Low stock alert: "Vanilla Essence"', time: "5 hours ago" },
+    { id: 4, action: 'Order #102 marked COMPLETED', time: "1 day ago" },
   ];
 
   const getColorClasses = (color: string) => {
-    switch(color) {
-        case 'blue': return 'bg-blue-50 text-blue-600';
-        case 'red': return 'bg-red-50 text-red-600';
-        case 'green': return 'bg-green-50 text-green-600';
-        case 'orange': return 'bg-orange-50 text-orange-600';
-        default: return 'bg-gray-50 text-gray-600';
+    switch (color) {
+      case 'blue': return 'bg-blue-50 text-blue-600';
+      case 'red': return 'bg-red-50 text-red-600';
+      case 'green': return 'bg-green-50 text-green-600';
+      case 'orange': return 'bg-orange-50 text-orange-600';
+      default: return 'bg-gray-50 text-gray-600';
     }
   };
 
   const handleAskSousChefAi = async () => {
-    if(!aiQuery.trim()) return;
+    if (!aiQuery.trim()) return;
+
     setLoading(true);
+
+    // 1. Create the audio object immediately to "prime" the browser for playback
+    // This helps bypass strict autoplay blocks in Chrome/Safari
+    const audioPlayer = new Audio();
+
     try {
-        const {status, message, data} = await askSousChefAi(aiQuery);
-        if (status === 200) {
-          setAiResponse(data);
-          setAiQuery(""); 
-        } else {
-          toast.error(message || "Error: " + status);
+      // 2. Call the API with the sound toggle state
+      const response: any = await askSousChefAi(aiQuery, soundEnabled);
+
+      // Destructure from response (adjusting for your return structure)
+      const { status, message, data, audio } = response;
+
+      if (status === 200) {
+        setAiResponse(data);
+        setAiQuery("");
+
+        // 3. Handle Voice Playback
+        if (audio && soundEnabled) {
+          // Assign the base64 string as the audio source
+          audioPlayer.src = `data:audio/mp3;base64,${audio}`;
+
+          // Play and handle potential play() interruptions
+          audioPlayer.play().catch(e => {
+            console.warn("Audio playback was prevented by the browser. Interaction required.", e);
+          });
         }
+
+        // 4. Check for Inventory Warnings in the response
+        // If the backend sent an "Insufficient Stock" message, we show a toast alert
+        if (data.toLowerCase().includes("insufficient stock")) {
+          toast.error("Order update failed: Inventory shortage.", {
+            duration: 5000,
+            icon: '🚫',
+          });
+        } else if (data.toLowerCase().includes("updated") || data.toLowerCase().includes("marked")) {
+          // If it was a successful order update, show a success toast
+          toast.success("Order status updated!");
+        }
+
+      } else {
+        // Handle logical errors from the backend
+        toast.error(message || `Error: ${status}`);
+      }
     } catch (err) {
-        toast.error("Something went wrong");
+      // Handle network or unexpected crashes
+      console.error("Chat Error:", err);
+      toast.error("I'm having trouble connecting to the server.");
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className={`min-h-screen p-6 relative ${isModalOpen ? 'overflow-hidden h-screen' : ''}`} style={{ color: theme.text, fontFamily: theme.fontFamily }}>
-      
+
       {/* --- MODAL OVERLAY --- */}
       <AnimatePresence>
         {isModalOpen && (
@@ -242,53 +353,62 @@ const Dashboard = () => {
             >
               {/* Header */}
               <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
-                 <div className="flex items-center gap-3">
-                    <div className="p-2 bg-indigo-50 rounded-lg">
-                        <AutoAwesome className="text-indigo-600" />
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-800">Sous Chef AI</h2>
-                        <p className="text-sm text-gray-500">Expanded Conversation</p>
-                    </div>
-                 </div>
-                 <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-50 rounded-lg">
+                    <AutoAwesome className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">Sous Chef AI</h2>
+                    <p className="text-sm text-gray-500">Expanded Conversation</p>
+                  </div>
+                </div>
+
+                {/* 👉 NEW: Expanded Modal Header Icons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className={`p-2 hover:bg-gray-100 rounded-full transition-colors ${soundEnabled ? 'text-indigo-600 bg-indigo-50' : 'text-gray-500'}`}
+                    title={soundEnabled ? "Voice Output On" : "Voice Output Off"}
+                  >
+                    {soundEnabled ? <VolumeUp /> : <VolumeOff />}
+                  </button>
+
+                  <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                     <CloseFullscreen />
-                 </button>
+                  </button>
+                </div>
               </div>
 
               {/* Body */}
               <div className="flex-1 p-6 md:p-8 overflow-y-auto bg-gray-50/50">
-                 
-                 {/* ✅ FIX: Modal now shows Loading Orb */}
-                 {loading ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                        <AIOrb large={true} />
-                        <p className="mt-6 text-xl font-medium text-gray-600 animate-pulse">Thinking...</p>
-                    </div>
-                 ) : aiResponse ? (
-                    <div className="bg-white p-6 md:p-8 rounded-xl border border-indigo-100 shadow-sm mx-auto max-w-3xl">
-                        <FormatAIResponse text={aiResponse} isExpanded={true} />
-                    </div>
-                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                        <AIOrb large={true} />
-                        <p className="mt-6 text-xl font-medium text-gray-600">How can I help you today?</p>
-                    </div>
-                 )}
-
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <AIOrb large={true} />
+                    <p className="mt-6 text-xl font-medium text-gray-600 animate-pulse">Thinking...</p>
+                  </div>
+                ) : aiResponse ? (
+                  <div className="bg-white p-6 md:p-8 rounded-xl border border-indigo-100 shadow-sm mx-auto max-w-3xl">
+                    <FormatAIResponse text={aiResponse} isExpanded={true} />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <AIOrb large={true} />
+                    <p className="mt-6 text-xl font-medium text-gray-600">How can I help you today?</p>
+                  </div>
+                )}
               </div>
 
               {/* Footer */}
               <div className="p-6 bg-white border-t border-gray-100 shrink-0">
-                 <div className="max-w-3xl mx-auto">
-                    <ChatInput 
-                        query={aiQuery}
-                        setQuery={setAiQuery}
-                        onSend={handleAskSousChefAi}
-                        loading={loading}
-                        isExpanded={true} 
-                    />
-                 </div>
+                <div className="max-w-3xl mx-auto">
+                  <ChatInput
+                    query={aiQuery}
+                    setQuery={setAiQuery}
+                    onSend={handleAskSousChefAi}
+                    loading={loading}
+                    isExpanded={true}
+                  />
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -318,8 +438,8 @@ const Dashboard = () => {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-medium text-xs ${stat.isPositive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    {stat.isPositive ? <TrendingUp fontSize="inherit" /> : <TrendingDown fontSize="inherit" />}
-                    {stat.trend}
+                  {stat.isPositive ? <TrendingUp fontSize="inherit" /> : <TrendingDown fontSize="inherit" />}
+                  {stat.trend}
                 </span>
                 <span className="text-gray-400 text-xs">vs last month</span>
               </div>
@@ -327,12 +447,11 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* ✅ FIX: Used the Memoized Chart Component */}
         <DashboardCharts theme={theme} />
 
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Recent Activity */}
           <div className="rounded-2xl bg-white shadow-sm border border-gray-100 lg:col-span-2">
             <div className="p-6 border-b border-gray-50">
@@ -355,89 +474,98 @@ const Dashboard = () => {
 
           {/* AI Assistant Card - Small Widget */}
           <div className="rounded-2xl bg-white shadow-sm border border-gray-100 flex flex-col justify-between overflow-hidden h-[400px]">
-            
+
             <div className="p-6 flex items-center justify-between bg-white z-10">
               <div className="flex items-center gap-2">
                 <AutoAwesome className="text-indigo-500" fontSize="small" />
                 <h3 className="text-lg font-bold text-gray-800">Sous Chef AI</h3>
               </div>
+
+              {/* 👉 NEW: Widget Header Icons */}
               <div className="flex items-center gap-1">
-                  {aiResponse && (
-                      <button onClick={() => setAiResponse(null)} className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors" title="Clear Chat">
-                          <Close fontSize="small" />
-                      </button>
-                  )}
-                  <button onClick={() => setIsModalOpen(true)} className="p-1 hover:bg-gray-100 text-gray-400 hover:text-indigo-600 rounded-full transition-colors">
-                    <OpenInFull fontSize="small" />
+                <button
+                  onClick={() => setSoundEnabled(!soundEnabled)}
+                  className={`p-1 rounded-full transition-colors ${soundEnabled ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:bg-gray-100'}`}
+                  title={soundEnabled ? "Voice Output On" : "Voice Output Off"}
+                >
+                  {soundEnabled ? <VolumeUp fontSize="small" /> : <VolumeOff fontSize="small" />}
+                </button>
+
+                {aiResponse && (
+                  <button onClick={() => setAiResponse(null)} className="p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-full transition-colors" title="Clear Chat">
+                    <Close fontSize="small" />
                   </button>
+                )}
+                <button onClick={() => setIsModalOpen(true)} className="p-1 hover:bg-gray-100 text-gray-400 hover:text-indigo-600 rounded-full transition-colors">
+                  <OpenInFull fontSize="small" />
+                </button>
               </div>
             </div>
 
             <div className="px-6 flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-                <AnimatePresence mode="wait">
-                    {/* ✅ FIX: Small card also shows Loading Orb */}
-                    {loading ? (
-                         <motion.div 
-                            key="loading"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex flex-col items-center justify-center w-full h-full"
-                        >
-                            <div className="h-32 w-full flex items-center justify-center">
-                                <AIOrb />
-                            </div>
-                            <p className="text-sm text-center text-gray-500 mt-4 font-medium px-4 animate-pulse">
-                                Thinking...
-                            </p>
-                        </motion.div>
-                    ) : aiResponse ? (
-                        <motion.div 
-                            key="response"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="w-full h-full bg-indigo-50/50 rounded-xl p-4 text-left border border-indigo-100 relative flex flex-col"
-                        >
-                             <div className="flex-1 overflow-hidden">
-                                <FormatAIResponse text={aiResponse} />
-                             </div>
-                             
-                             <button 
-                                onClick={() => setIsModalOpen(true)}
-                                className="mt-2 w-full py-1.5 text-xs font-semibold text-indigo-700 bg-white/80 hover:bg-white rounded-lg border border-indigo-200 shadow-sm flex items-center justify-center gap-1 transition-all"
-                             >
-                                <Visibility fontSize="inherit" />
-                                View Full Response
-                             </button>
+              <AnimatePresence mode="wait">
+                {loading ? (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center w-full h-full"
+                  >
+                    <div className="h-32 w-full flex items-center justify-center">
+                      <AIOrb />
+                    </div>
+                    <p className="text-sm text-center text-gray-500 mt-4 font-medium px-4 animate-pulse">
+                      Thinking...
+                    </p>
+                  </motion.div>
+                ) : aiResponse ? (
+                  <motion.div
+                    key="response"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="w-full h-full bg-indigo-50/50 rounded-xl p-4 text-left border border-indigo-100 relative flex flex-col"
+                  >
+                    <div className="flex-1 overflow-hidden">
+                      <FormatAIResponse text={aiResponse} />
+                    </div>
 
-                        </motion.div>
-                    ) : (
-                        <motion.div 
-                            key="orb"
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="flex flex-col items-center justify-center w-full h-full"
-                        >
-                            <div className="h-32 w-full flex items-center justify-center">
-                                <AIOrb />
-                            </div>
-                            <p className="text-sm text-center text-gray-500 mt-4 font-medium px-4">
-                                Ready to help.
-                            </p>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="mt-2 w-full py-1.5 text-xs font-semibold text-indigo-700 bg-white/80 hover:bg-white rounded-lg border border-indigo-200 shadow-sm flex items-center justify-center gap-1 transition-all"
+                    >
+                      <Visibility fontSize="inherit" />
+                      View Full Response
+                    </button>
+
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="orb"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="flex flex-col items-center justify-center w-full h-full"
+                  >
+                    <div className="h-32 w-full flex items-center justify-center">
+                      <AIOrb />
+                    </div>
+                    <p className="text-sm text-center text-gray-500 mt-4 font-medium px-4">
+                      Ready to help.
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="p-4 bg-white border-t border-gray-50">
-               <ChatInput 
-                  query={aiQuery}
-                  setQuery={setAiQuery}
-                  onSend={handleAskSousChefAi}
-                  loading={loading}
-               />
+              <ChatInput
+                query={aiQuery}
+                setQuery={setAiQuery}
+                onSend={handleAskSousChefAi}
+                loading={loading}
+              />
             </div>
 
           </div>

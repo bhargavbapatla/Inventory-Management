@@ -169,6 +169,8 @@ const Recipes = () => {
             updateRecipe({ ...data })
           );
           toast.success(message || "Recipe updated");
+          helpers.resetForm();
+          handleClose();
         } else {
           toast.error(message || "Error updating recipe");
         }
@@ -181,6 +183,7 @@ const Recipes = () => {
           ingredients: mappedIngredients,
           totalCostPrice,
         })
+        console.log("message", message);
         if (status === 201 || status === 200) {
           dispatch(
             addRecipe({
@@ -189,6 +192,8 @@ const Recipes = () => {
             })
           );
           toast.success(message || "Recipe added");
+          helpers.resetForm();
+          handleClose();
 
         } else {
           toast.error(message || "Error adding recipe");
@@ -196,8 +201,6 @@ const Recipes = () => {
 
       }
       setLoading(false);
-      helpers.resetForm();
-      handleClose();
     },
   });
 
@@ -254,7 +257,6 @@ const Recipes = () => {
   };
 
   const handleChangeIngredientInventory = (id: string, inventoryId: string, price: any) => {
-    console.log("price", price);
     formik.setFieldValue(
       "ingredients",
       formik.values.ingredients.map((ing) =>
@@ -371,25 +373,33 @@ const Recipes = () => {
     const ingredientsCost = formik.values.ingredients.reduce((acc, ing) => {
       const inventoryItem = inventoryItems.find((inv) => inv.id === ing.inventoryId);
 
-      if (!inventoryItem || !inventoryItem.price) {
+      if (!inventoryItem || !inventoryItem.price || !inventoryItem.quantity) {
         return acc;
       }
-      console.log("inventoryItem---", inventoryItem);
-      let inventoryItemBaseWeightInGrams = 0;
+
+      let totalHistoricalBaseUnits = 0;
+
       if (inventoryItem.category === 'INGREDIENTS') {
-      inventoryItemBaseWeightInGrams = (toGrams(inventoryItem.weight, inventoryItem.unit) * inventoryItem.quantity);
+        const weightInGrams = toGrams(inventoryItem.weight, inventoryItem.unit);
+        totalHistoricalBaseUnits = weightInGrams * inventoryItem.quantity;
       } else {
-        inventoryItemBaseWeightInGrams = inventoryItem.quantity
+        totalHistoricalBaseUnits = inventoryItem.quantity;
       }
-      if (inventoryItemBaseWeightInGrams === 0) return acc;
 
-      const pricePerGram = inventoryItem.price / inventoryItemBaseWeightInGrams;
-      console.log("pricePerGram", inventoryItem, inventoryItem.price, inventoryItemBaseWeightInGrams);
+      if (totalHistoricalBaseUnits === 0) return acc;
 
+      const averageCostPerBaseUnit = inventoryItem.price / totalHistoricalBaseUnits;
 
-      const quantityNeededInGrams = toGrams(Number(ing.quantityNeeded) || 0, ing.unit);
+      let quantityNeededInBaseUnits = 0;
+      if (inventoryItem.category === 'INGREDIENTS') {
+        quantityNeededInBaseUnits = toGrams(Number(ing.quantityNeeded) || 0, ing.unit);
+      } else {
+        quantityNeededInBaseUnits = Number(ing.quantityNeeded) || 0;
+      }
+      console.log("quantityNeededInBaseUnits", quantityNeededInBaseUnits, inventoryItem, averageCostPerBaseUnit);
+      const finalIngredientCost = quantityNeededInBaseUnits * averageCostPerBaseUnit;
 
-      return acc + (quantityNeededInGrams * pricePerGram);
+      return acc + finalIngredientCost;
     }, 0);
 
     return Number((makingCharge + ingredientsCost).toFixed(2));
@@ -420,6 +430,7 @@ const Recipes = () => {
         <option value="KGS">kgs</option>
         <option value="POUNDS">pounds</option>
         <option value="LITERS">liters</option>
+        <option value="MILLILITERS">ml</option>
         <option value="PIECES">pieces</option>
       </Fragment>
     } else {
@@ -677,7 +688,6 @@ const Recipes = () => {
                             const inventoryItem: InventoryItem | undefined = inventoryItems.find(
                               (inv) => inv.id === ing.inventoryId
                             );
-                            console.log("inventoryItem", inventoryItem);
                             return (
                               <tr key={ing.id}>
                                 <td className="px-4 py-2 text-sm">
